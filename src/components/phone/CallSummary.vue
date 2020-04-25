@@ -10,8 +10,12 @@
         <base-text variant="bodysm" weight="300">Julie Smith</base-text>
       </div>
       <div class="box c">
-        <!-- {{ caseNumber }} -->
-        <base-text variant="bodysm" weight="300">C11</base-text>
+        <div class="flex flex-row">
+          <!-- {{ caseNumber }} -->
+          <base-text variant="bodysm" weight="300">C11</base-text>
+          <img src="@/assets/redlobster.jpg" class="h-6 ml-1" />
+          <img src="@/assets/yellowboot.jpg" class="h-6 ml-1" />
+        </div>
       </div>
       <div class="box d">
         <!-- {{ callStatus }} -->
@@ -66,7 +70,7 @@ export default {
   display: grid;
   grid-template-columns: repeat(6, minmax(50px, 1fr));
   /* max-width: 800px; */
-  min-width: 700px;
+  min-width: 775px;
 }
 .row {
   grid-column: 1 / -1;
