@@ -61,6 +61,7 @@
             class="px-3 py-2"
             :action="() => finishTraining()"
           >
+            <!-- :action="() => (editCardActive = !editCardActive)" -->
             {{ lang.actions.complete.text }}
           </base-button>
           <base-button
@@ -85,6 +86,11 @@
         ></training-detail>
       </div>
       <div slot="footer"></div>
+      <agent-edit-card
+        :active="editCardActive"
+        :request="{ phone: true, lang: true }"
+        @user-updated="() => (editCardActive = false)"
+      />
     </modal>
   </div>
 </template>
@@ -93,12 +99,14 @@
 import { TrainingMixin } from '@/mixins';
 import TrainingsCard from '@/components/phone/TrainingsCard.vue';
 import Training from '@/components/phone/Training.vue';
+import CallerIDEditCard from '@/components/phone/CallerIDEditCard.vue';
 
 export default {
   name: 'TrainingsModal',
   components: {
     'trainings-card': TrainingsCard,
     'training-detail': Training,
+    'agent-edit-card': CallerIDEditCard,
   },
   mixins: [TrainingMixin],
   props: {
@@ -114,6 +122,7 @@ export default {
       selectedTraining: null,
       trainings: [],
       userTrainings: [],
+      editCardActive: false,
     };
   },
   computed: {
@@ -154,12 +163,15 @@ export default {
       this.selectedTraining = null;
     },
     finishTraining() {
+      this.openModal();
       this.$emit('onComplete', true);
-      this.close();
     },
     close() {
       this.visible = false;
       this.$emit('onClose', this.visible);
+    },
+    openModal() {
+      this.editCardActive = true;
     },
   },
 };
