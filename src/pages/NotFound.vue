@@ -13,6 +13,9 @@ import HomeLayout from '@/layouts/Home';
 export default {
   name: 'NotFound',
   components: { HomeLayout },
+  data() {
+    return {};
+  },
 };
 </script>
 
