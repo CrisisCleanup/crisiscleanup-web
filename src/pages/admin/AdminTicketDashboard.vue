@@ -1,6 +1,6 @@
 <template>
-  <div class="my-2 justify-center items-center">
-    <div class="gridContainer">
+  <div class="">
+    <div class="gridContainer sm:gridContainer-mobile">
       <TicketCards
         :key="`${item.id}-${idx}`"
         v-for="(item, idx) in ticketWithCCData"
@@ -211,14 +211,24 @@ export default {
 </script>
 
 <style>
+@media (min-width: 600px) {
+  .gridContainer {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .gridContainer {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .gridContainer {
-  justify-content: center;
+  @apply mt-6;
+  max-width: 600px;
+
   display: grid;
-  justify-items: stretch;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: auto;
-  column-gap: 20px;
-  row-gap: 20px;
+  grid-gap: 1rem;
 
   &-mobile {
     justify-content: center;
