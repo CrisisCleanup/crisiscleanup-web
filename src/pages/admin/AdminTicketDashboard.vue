@@ -1,57 +1,192 @@
 <template>
-  <div class="my-2">
-    <Table
-      :columns="ticketTable.columns"
-      :data="tickets"
-      style="height: 450px;"
-      :body-style="{ maxHeight: '450px' }"
-    >
-      <template #url="slotProps">
-        <base-link
-          :href="`http://crisiscleanup.zendesk.com/agent/tickets/${slotProps.item.id}`"
-          text-variant="bodysm"
-          class="px-2"
-          target="_blank"
-          >{{ $t('~~Link') }}</base-link
-        >
-      </template>
-    </Table>
+  <div class="">
+    <div class="gridContainer sm:gridContainer-mobile">
+      <TicketCards
+        :key="`${item.id}-${idx}`"
+        v-for="(item, idx) in ticketWithCCData"
+        :ticket-data="item"
+      />
+    </div>
   </div>
 </template>
 
 <script>
+import _ from 'lodash';
 import { makeTableColumns } from '@/utils/table';
-import Table from '@/components/Table';
+import TicketCards from './TicketCards.vue';
 
 export default {
   name: 'TicketDashboard',
-  components: { Table },
+  components: { TicketCards },
   data() {
     return {
       tickets: [],
+
+      ticketWithCCData: [],
     };
   },
   async mounted() {
-    await this.getTickets();
+    // await this.getTickets();
+    // const x = await this.fetchTickets();
+    // console.log(x);
+    await this.fetchTickets();
+    // await this.getTickets();
   },
   methods: {
-    async getTickets() {
+    async fetchTickets() {
       const response = await this.$http.get(
         `${process.env.VUE_APP_API_BASE_URL}/zendesk/search?query=status<solved`,
       );
       const { results } = response.data;
-      this.tickets = results.map((result) => {
-        return {
-          id: result.id,
-          description: result.description,
-          via: result.via.channel,
-          url: result.url,
-          created_at: result.created_at,
-          requester_id: result.requester_id,
-        };
-      });
-      return this.tickets;
+      console.log(results);
+      _.map(
+        _.map(results, (obj) =>
+          _.pick(obj, [
+            'id',
+            'description',
+            'via',
+            'url',
+            'created_at',
+            'requester_id',
+            'status',
+            'assignee_id',
+          ]),
+        ),
+        async (t) => {
+          // console.log('this is what deep wanted',
+          //   await this.$http.get(
+          //     `${process.env.VUE_APP_API_BASE_URL}/zendesk/users/${t.requester_id}`,
+          //   ),
+          // );
+          const {
+            data: {
+              user: { name, phone, role, email, photo },
+            },
+          } = await this.$http.get(
+            `${process.env.VUE_APP_API_BASE_URL}/zendesk/users/${t.requester_id}`,
+          );
+          const { data } = await this.$http.get(
+            `${process.env.VUE_APP_API_BASE_URL}/zendesk/users/${t.requester_id}`,
+          );
+          const obj = _.merge(t, {
+            name,
+            phone,
+            role,
+            email,
+            photo,
+            last_sign_in_at: '',
+            primary_language: '',
+            organization: '',
+          });
+          if (data.ccu_user) {
+            const {
+              ccu_user: {
+                mobile,
+                last_sign_in_at,
+                primary_language,
+                organization,
+              },
+            } = data;
+            obj.phone = mobile;
+            obj.last_sign_in_at = last_sign_in_at;
+            obj.primary_language = primary_language;
+            obj.organization = organization;
+          }
+          console.log(obj);
+          this.ticketWithCCData.push(obj);
+          return obj;
+        },
+      );
     },
+    // async fetchTickets() {
+    //   const response = await this.$http.get(
+    //     `${process.env.VUE_APP_API_BASE_URL}/zendesk/search?query=status<solved`,
+    //   );
+    //   const { results } = response.data;
+    //   console.log(results);
+    //   _.map(
+    //     _.map(results, (obj) =>
+    //       _.pick(obj, [
+    //         'id',
+    //         'description',
+    //         'via',
+    //         'url',
+    //         'created_at',
+    //         'requester_id',
+    //         'status',
+    //         'assignee_id',
+    //       ]),
+    //     ),
+    //     async (t) => {
+    //       console.log(
+    //         'this is what deep wanted',
+    //         await this.$http.get(
+    //           `${process.env.VUE_APP_API_BASE_URL}/zendesk/users/${t.requester_id}`,
+    //         ),
+    //       );
+    //       const {
+    //         data: {
+    //           ccu_user: {
+    //             mobile,
+    //             last_sign_in_at,
+    //             primary_language,
+    //             organization,
+    //           },
+    //           user: { name, phone, role, email, photo },
+    //         },
+    //       } = await this.$http.get(
+    //         `${process.env.VUE_APP_API_BASE_URL}/zendesk/users/${t.requester_id}`,
+    //       );
+    //       const obj = _.merge(t, {
+    //         name,
+    //         phone: mobile || phone,
+    //         last_sign_in_at: last_sign_in_at || '',
+    //         role,
+    //         email,
+    //         photo,
+    //         primary_language: primary_language || '',
+    //         organization: organization || '',
+    //       });
+    //       console.log(obj);
+    //       this.ticketWithCCData.push(obj);
+    //       return obj;
+    //     },
+    //   );
+    // },
+
+    // async fetchTickets() {
+    //   const response = await this.$http.get(
+    //     `${process.env.VUE_APP_API_BASE_URL}/zendesk/search?query=status<solved`,
+    //   );
+    //   const { results } = response.data;
+    //   console.log(results);
+    //   _.map(
+    //     _.map(results, (obj) => _.pick(obj, ['id', 'description', 'via', 'url', 'created_at', 'requester_id', 'status', 'assignee_id'])),
+    //     async (t) => {
+    //       console.log('this is what deep wanted',
+    //         await this.$http.get(
+    //           `${process.env.VUE_APP_API_BASE_URL}/zendesk/users/${t.requester_id}`,
+    //         ),
+    //       );
+    //       const {
+    //         data: {
+    //           user: {
+    //             name,
+    //             phone,
+    //             role,
+    //             email,
+    //             photo,
+    //           },
+    //         },
+    //       } = await this.$http.get(`${process.env.VUE_APP_API_BASE_URL}/zendesk/users/${t.requester_id}`);
+    //       // const aa = await this.$http.get(`${process.env.VUE_APP_API_BASE_URL}/zendesk/users/484643688`);
+    //       // console.log('user with phone', aa);
+    //       const obj = _.merge(t, { name, phone, role, email, photo });
+    //       console.log(obj);
+    //       this.ticketWithCCData.push(obj);
+    //       return obj;
+    //     });
+    // },
   },
   computed: {
     ticketTable() {
@@ -74,3 +209,35 @@ export default {
   },
 };
 </script>
+
+<style>
+@media (min-width: 600px) {
+  .gridContainer {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .gridContainer {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.gridContainer {
+  @apply mt-6;
+  max-width: 600px;
+
+  display: grid;
+  grid-gap: 1rem;
+
+  &-mobile {
+    justify-content: center;
+    display: grid;
+    justify-items: stretch;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    column-gap: 20px;
+    row-gap: 20px;
+  }
+}
+</style>
